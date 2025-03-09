@@ -1,4 +1,7 @@
-FROM curlimages/curl:latest
+FROM debian:stable-slim
+
+# Install curl
+RUN apt-get update && apt-get install -y curl && apt-get clean
 
 # Set the default command to call your API
-CMD ["curl", "-X", "POST", "https://scraper-service-907s.onrender.com/scrape-accounts"]
+CMD curl -X POST https://scraper-service-907s.onrender.com/scrape-accounts
