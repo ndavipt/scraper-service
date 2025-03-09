@@ -1,0 +1,4 @@
+FROM curlimages/curl:latest
+
+# Set the default command to call your API
+CMD ["curl", "-X", "POST", "https://scraper-service-907s.onrender.com/scrape-accounts"]
