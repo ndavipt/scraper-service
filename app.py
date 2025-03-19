@@ -357,6 +357,47 @@ async def list_accounts():
     except Exception as e:
         print(f"ERROR listing accounts: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+        
+@app.delete("/accounts/{username}")
+async def delete_account(username: str):
+    """Delete an Instagram account from tracking by username"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        
+        # Check if account exists
+        cur.execute("SELECT id FROM instagram_accounts WHERE username = %s", (username,))
+        existing = cur.fetchone()
+        
+        if not existing:
+            cur.close()
+            conn.close()
+            raise HTTPException(status_code=404, detail=f"Account '{username}' not found")
+        
+        account_id = existing[0]
+        
+        # First delete associated profile data
+        cur.execute("DELETE FROM instagram_profiles WHERE account_id = %s", (account_id,))
+        
+        # Then delete the account
+        cur.execute("DELETE FROM instagram_accounts WHERE id = %s", (account_id,))
+        
+        affected_rows = cur.rowcount
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        if affected_rows > 0:
+            return {"message": f"Account '{username}' and all associated profile data deleted successfully"}
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to delete account '{username}'")
+    except HTTPException:
+        # Re-raise HTTP exceptions as is
+        raise
+    except Exception as e:
+        print(f"ERROR deleting account: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
